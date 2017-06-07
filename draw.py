@@ -248,22 +248,42 @@ def scanline(matrix, index, screen):
     mid = points[1]
     top = points[2]
 
+    print "btm: ", btm
+    print "mid: ", mid
+    print "top: ", top
+
     dx0 = (top[0] - btm[0]) / (top[1] - btm[1]) if (top[1] - btm[1]) != 0 else 0
     dx1 = (mid[0] - btm[0]) / (mid[1] - btm[1]) if (mid[1] - btm[1]) != 0 else 0
     dx2 = (top[0] - mid[0]) / (top[1] - mid[1]) if (top[1] - mid[1]) != 0 else 0
-    print dx0, dx1, dx2
+    print "dx0: ", dx0
+    print "dx1: ", dx1
+    print "dx2: ", dx2
     x0 = x1 = btm[0]
+    if btm[1] == mid[1]:
+        x1 = mid[0]
     y = btm[1]
 
     color = [ random.randint(0, 255), random.randint(0, 255), random.randint(0, 255) ]
 
+    print "in"
+    while y < mid[1]:        
+        draw_line(int(x0), int(y), int(x1), int(y), screen, color)
+        print "x0: %s, x1: %s, y %s" % (x0, x1, y)
+        x0 += dx0
+        x1 += dx1
+        y += 1
+    x1 = mid[0]
+    y = mid[1]
+    print "out"
+    
     while y < top[1]:
         draw_line(int(x0), int(y), int(x1), int(y), screen, color)
+        print "x0: %s, x1: %s, y %s" % (x0, x1, y)
         x0 += dx0
-        x1 += dx1 if y < mid[1] else dx2
+        x1 += dx2
         y += 1
         
-
+        
 def draw_line( x0, y0, x1, y1, screen, color ):
 
     #swap points if going right -> left
