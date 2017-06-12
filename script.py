@@ -94,11 +94,7 @@ def second_pass( commands, num_frames ):
                 #print 'knob: ' + knob_name + '\tvalue: ' + str(frames[f][knob_name])
     return frames
 
-def run(filename):
-    """
-    This function runs an mdl script
-    """
-    color = [255, 255, 255]
+def lighting(filename):
     ambient = []
     diffuse = []
     specular = []
@@ -106,12 +102,31 @@ def run(filename):
     constants_red = []
     constants_green = []
     constants_blue = []
-
+    
     I_ambient = []
     I_diffuse = []
     I_specular = []
     I_total = []
+    
+    for command in commands:
+        if c == 'ambient':
+            ambient = args[:3]
+        elif c == 'light':
+            light_source = args[1:4]
+            light_color = args[4:7]
+        elif c == 'constants':
+            constants_red = args[1:4]
+            constants_green = args[4:7]
+            constants_blue = args[7:10]
+        
+    
 
+def run(filename):
+    """
+    This function runs an mdl script
+    """
+    color = [255, 255, 255]
+   
     tmp = new_matrix()
     ident( tmp )
 
@@ -158,15 +173,6 @@ def run(filename):
                 for knob in symbols:
                     if symbols[knob][0] == 'knob':
                         symbols[knob][1] = args[0]
-            elif c == 'ambient':
-                ambient = args[:3]
-            elif c == 'light':
-                light_source = args[1:4]
-                #??? = args[4:7]
-            elif c == 'constants':
-                constants_red = args[1:4]
-                constants_green = args[4:7]
-                constants_blue = args[7:10]
             elif c == 'box':
                 add_box(tmp,
                         args[0], args[1], args[2],
