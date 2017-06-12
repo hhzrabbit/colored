@@ -1,5 +1,2 @@
-rotate x 10
-rotate y 10
-rotate x 10
-sphere 250 250 0 100
-save pic.png
+torus 250 250 250 10 50
+display
