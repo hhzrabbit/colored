@@ -4,16 +4,87 @@ from math import *
 from gmath import *
 import random
 
-def scanline_convert(polygons, i, screen, zbuffer):
+def get_color(normal, lighting_info, lighting_name):
+    ambient = get_ambient(lighting_info, lighting_name)
+    diffuse = get_diffuse(normal, lighting_info, lighting_name)
+ #   specular = get_specular(normal, lighting_info, lighting_name)
+    I = [ambient[0] + diffuse[0], #+ specular[0],
+         ambient[1] + diffuse[1], #+ specular[1],
+        ambient[2] + diffuse[2] ]#+ specular[2]]
+ #   return I
+    return [int(max(min(x, 255), 0)) for x in I]
+
+def get_ambient(lighting_info, lighting_name):
+    source_color = lighting_info["ambient"]
+    const = lighting_info["constants"][lighting_name]
+    ambient_const = [ const["red"][0], const["green"][0], const["blue"][0] ]
+    ambient = [ ambient_const[0] * source_color[0], #red
+                ambient_const[1] * source_color[1], #green
+                ambient_const[2] * source_color[2] ] #blue
+    return ambient
+    
+def get_diffuse(normal, lighting_info, lighting_name):
+    const = lighting_info["constants"][lighting_name]
+    diffuse_const = [ const["red"][1], const["green"][1], const["blue"][1] ]
+
+    normal = normalize_vector(normal)
+
+    total_diffuse = [0, 0, 0]
+    for entry in lighting_info["lights"]:
+        light_source = lighting_info["lights"][entry]
+        source_color = light_source["color"]
+        location = light_source["location"]
+        dot_prod = dot_product(normal, location)
+
+        diffuse = [ source_color[0] * diffuse_const[0] * dot_prod,
+                    source_color[1] * diffuse_const[1] * dot_prod,
+                    source_color[2] * diffuse_const[2] * dot_prod ]
+        total_diffuse = [ total_diffuse[0] + diffuse[0],
+                          total_diffuse[1] + diffuse[1],
+                          total_diffuse[2] + diffuse[2] ]
+    return total_diffuse
+
+#specular doesn't work 
+def get_specular(normal, lighting_info, lighting_name):
+    const = lighting_info["constants"][lighting_name]
+    specular_const = [ const["red"][1], const["green"][1], const["blue"][1] ]
+
+    normal = normalize_vector(normal)
+
+    total_specular = [0, 0, 0]
+    for entry in lighting_info["lights"]:
+        light_source = lighting_info["lights"][entry]
+        source_color = light_source["color"]
+        location = light_source["location"]
+        dot_prod = dot_product(normal, location)
+
+        a = [2 * dot_prod * x for x in normal]
+        b = [ a[0] - location[0],
+              a[1] - location[1],
+              a[2] - location[2] ]
+        b = normalize_vector(b)
+
+        specular_r = source_color[0] * specular_const[0]
+
+    return total_specular
+        
+def magnitude(vector):
+    dist = sqrt((vector[0] * vector[0]) + (vector[1] * vector[1]) + (vector[2] * vector[2]))
+    return dist
+
+def normalize_vector(vector):
+    dist = magnitude(vector)
+    return [vector[0] / dist, vector[1] / dist, vector[2] / dist]
+
+def dot_product(v0, v1):
+    return v0[0] * v1[0] + v0[1] * v1[1] + v0[2] * v0[2]
+
+def scanline_convert(polygons, i, screen, zbuffer, color):
     points = polygons[i:i+3]
     points = sorted(points, key=lambda x: x[1])
     btm = points[0]
     mid = points[1]
     top = points[2]
-
-    print "btm: ", btm
-    print "mid: ", mid
-    print "top: ", top
 
     dx0 = (top[0] - btm[0]) / (top[1] - btm[1]) if (top[1] - btm[1]) != 0 else 0
     dx1 = (mid[0] - btm[0]) / (mid[1] - btm[1]) if (mid[1] - btm[1]) != 0 else 0
@@ -23,18 +94,20 @@ def scanline_convert(polygons, i, screen, zbuffer):
         x1 = mid[0]
     y = btm[1]
     
-    color = [ random.randint(0, 255), random.randint(0, 255), random.randint(0, 255) ]
+#    color = [ random.randint(0, 255), random.randint(0, 255), random.randint(0, 255) ]
 
     step = 1.0 / (mid[2] - btm[2]) if (mid[2] - btm[2]) != 0 else 0
     z = btm[2]
 
     while y < mid[1]:
         draw_line(int(x0), int(y), int(z), int(x1), int(y), int(z), screen, zbuffer, color)
-        print "x0: %s, x1: %s, y %s" % (x0, x1, y)
+    #    print "x0: %s, x1: %s, y %s" % (x0, x1, y)
         x0 += dx0
         x1 += dx1
         y += 1
         z += step
+
+    x0 -= dx0
     x1 = mid[0]
     y = mid[1]
 
@@ -43,7 +116,7 @@ def scanline_convert(polygons, i, screen, zbuffer):
 
     while y < top[1]:
         draw_line(int(x0), int(y), int(z), int(x1), int(y), int(z), screen, zbuffer, color)
-        print "x0: %s, x1: %s, y %s" % (x0, x1, y)
+      #  print "x0: %s, x1: %s, y %s" % (x0, x1, y)
         x0 += dx0
         x1 += dx2
         y += 1
@@ -54,18 +127,20 @@ def add_polygon( polygons, x0, y0, z0, x1, y1, z1, x2, y2, z2 ):
     add_point(polygons, x1, y1, z1);
     add_point(polygons, x2, y2, z2);
 
-def draw_polygons( matrix, screen, zbuffer, color ):
+def draw_polygons( matrix, screen, zbuffer, lighting_info, lighting_name ):
     if len(matrix) < 2:
         print 'Need at least 3 points to draw'
         return
 
     point = 0
     while point < len(matrix) - 2:
-
         normal = calculate_normal(matrix, point)[:]
         #print normal
         if normal[2] > 0:
-            scanline_convert(matrix, point, screen, zbuffer)            
+        #    color = [random.randint(0, 255), random.randint(0, 255), random.randint(0, 255)]
+            color = get_color(normal, lighting_info, lighting_name)
+            scanline_convert(matrix, point, screen, zbuffer, color)            
+          
             draw_line( int(matrix[point][0]),
                        int(matrix[point][1]),
                        matrix[point][2],

@@ -94,39 +94,31 @@ def second_pass( commands, num_frames ):
                 #print 'knob: ' + knob_name + '\tvalue: ' + str(frames[f][knob_name])
     return frames
 
-def lighting(filename):
+#symbols is dict
+def lighting(symbols):
     ambient = []
-    diffuse = []
-    specular = []
-    light_source = []
-    constants_red = []
-    constants_green = []
-    constants_blue = []
+    lights = {}
+    constants = {}
     
-    I_ambient = []
-    I_diffuse = []
-    I_specular = []
-    I_total = []
-    
-    for command in commands:
-        if c == 'ambient':
-            ambient = args[:3]
-        elif c == 'light':
-            light_source = args[1:4]
-            light_color = args[4:7]
-        elif c == 'constants':
-            constants_red = args[1:4]
-            constants_green = args[4:7]
-            constants_blue = args[7:10]
-        
-    
+    for name in symbols:
+        thing = symbols[name]
+        if "ambient" in thing:
+            ambient = thing[1:4]
+        elif "constants" in thing:
+            constants[name] = thing[1]
+        elif "light" in thing:
+            lights[name] = thing[1]
+
+    lighting_info = {"ambient" : ambient, "lights" : lights, "constants" : constants}
+    print lighting_info
+    return lighting_info
 
 def run(filename):
     """
     This function runs an mdl script
     """
     color = [255, 255, 255]
-   
+
     tmp = new_matrix()
     ident( tmp )
 
@@ -138,11 +130,11 @@ def run(filename):
         print "Parsing failed."
         return
 
+    lighting_info = lighting(symbols)
     (name, num_frames) = first_pass(commands)
     frames = second_pass(commands, num_frames)
     #print frames
-    step = 0.1
-
+    step = 0.005
     #print symbols
 
     for f in range(num_frames):
@@ -162,7 +154,6 @@ def run(filename):
                 #print '\tkob: ' + knob + '\tvalue: ' + str(frame[knob])
                 
         for command in commands:
-            #print command
             c = command[0]
             args = command[1:]
             knob_value = 1
@@ -178,19 +169,19 @@ def run(filename):
                         args[0], args[1], args[2],
                         args[3], args[4], args[5])
                 matrix_mult( stack[-1], tmp )
-                draw_polygons(tmp, screen, zb, color)
+                draw_polygons(tmp, screen, zb, lighting_info, args[6])
                 tmp = []
             elif c == 'sphere':
                 add_sphere(tmp,
                            args[0], args[1], args[2], args[3], step)
                 matrix_mult( stack[-1], tmp )
-                draw_polygons(tmp, screen, zb, color)
+                draw_polygons(tmp, screen, zb, lighting_info, args[4])
                 tmp = []
             elif c == 'torus':
                 add_torus(tmp,
                           args[0], args[1], args[2], args[3], args[4], step)
                 matrix_mult( stack[-1], tmp )
-                draw_polygons(tmp, screen, zb, color)
+                draw_polygons(tmp, screen, zb, lighting_info, args[5])
                 tmp = []
             elif c == 'move':
                 if command[-1]:
