@@ -1,71 +1,41 @@
-shading phong
+shading goroud
 ambient 255 255 255
-light l1 1 1 1 110 110 110
-light l2 -1 1 1 110 110 110
-light l3 1 -1 1 110 110 110
-light l4 -1 -1 1 110 110 110
-constants white 0.15 0.75 0.1 0.15 0.75 0.1 0.15 0.75 0.1
-constants grey 0.1 0.4 0.5 0.1 0.4 0.5 0.1 0.4 0.5
-
-frames 50
-basename dabbing
+light l1 0 1 1 255 0 255
+constants white 0.25 0.5 0.25 0.25 0.5 0.25 0.25 0.5 0.25
+frames 25
+basename robot
+//set spin .1
 //BODY
 push
 move 250 250 0
-rotate y 360 rotator
-vary rotator 0 12 0 0
-vary rotator 13 37 0 1
+rotate y 360 spin
 box white -100 125 50 200 250 100
 //HEAD
 push
 move 0 175 0
-rotate x 36 movinator
+rotate y 90
 sphere white 0 0 0 50
-//SUNGLASSES
-push
-move 50 0 0
-box grey 0 0 51 5 5 51
-pop
-push
-move -55 0 0
-box grey 0 0 51 5 5 51
-move 5 5 54
-box grey 0 0 0 42 20 4
-move 42 -5 0
-box grey 0 0 0 16 6 4
-move 16 5 0
-box grey 0 0 0 42 20 4
-pop
 pop
 //LEFT ARM
 push
 move -100 125 0
-rotate x -80 movinator
+rotate x -45
 box white -40 0 40 40 100 80
 //LEFT LOWER ARM
 push
 move -20 -100 0
-rotate z 90 dabbingnator
-vary dabbingnator 0 4 0 0
-vary dabbingnator 5 12 0 1
-vary dabbingnator 37 44 1 0
-vary dabbingnator 45 49 0 0
-rotate x -20 movinator
 box white -10 0 10 20 125 20
 pop
 pop
 //RIGHT ARM
 push
 move 100 125 0
-rotate z 132 movinator
-rotate y 100 movinator
-rotate x 20 movinator
-vary movinator 0 12 0 1
-vary movinator 37 49 1 0
+rotate x -45
 box white 0 0 40 40 100 80
 //RIGHT LOWER ARM
 push
 move 20 -100 0
+rotate x -20
 box white -10 0 10 20 125 20
 pop
 pop
@@ -78,3 +48,4 @@ pop
 push
 move 100 -125 0
 box white -50 0 40 50 120 80
+vary spin 0 24 0 1

@@ -7,10 +7,10 @@ import random
 def get_color(normal, lighting_info, lighting_name):
     ambient = get_ambient(lighting_info, lighting_name)
     diffuse = get_diffuse(normal, lighting_info, lighting_name)
- #   specular = get_specular(normal, lighting_info, lighting_name)
-    I = [ambient[0] + diffuse[0], #+ specular[0],
-         ambient[1] + diffuse[1], #+ specular[1],
-        ambient[2] + diffuse[2] ]#+ specular[2]]
+    specular = get_specular(normal, lighting_info, lighting_name)
+    I = [ambient[0] + diffuse[0] + specular[0],
+         ambient[1] + diffuse[1] + specular[1],
+        ambient[2] + diffuse[2] + specular[2]]
  #   return I
     return [int(max(min(x, 255), 0)) for x in I]
 
@@ -63,8 +63,16 @@ def get_specular(normal, lighting_info, lighting_name):
               a[1] - location[1],
               a[2] - location[2] ]
         b = normalize_vector(b)
+        view = normalize_vector([1, 1, 1])
+        c = dot_product(b, view)
+        
+        specular_r = source_color[0] * specular_const[0] * c
+        specular_g = source_color[1] * specular_const[1] * c
+        specular_b = source_color[2] * specular_const[2] * c
 
-        specular_r = source_color[0] * specular_const[0]
+        total_specular = [ total_specular[0] + specular_r,
+                           total_specular[1] + specular_g,
+                           total_specular[2] + specular_b ]
 
     return total_specular
         
